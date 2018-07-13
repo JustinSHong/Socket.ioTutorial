@@ -1,24 +1,34 @@
 // Dependencies
 const express = require("express"); // use express to render static files
-const server = express();
+const app = express();
+const server = require("http").Server(app);
+const io = require("socket.io").listen(server);
 const helmet = require("helmet");
 const cors = require("cors");
 
 const PORT = 8081;
 
 // middleware
-server.use(helmet());
-server.use(express.json());
-server.use(cors());
+app.use(helmet());
+app.use(express.json());
+app.use(cors());
 
 // express.static() is middleware that will render static files
-server.use(express.static(__dirname + "/public"));
+app.use(express.static(__dirname + "/public"));
 
 // Root - server serves the index.html
-server.get("/", function(req, res) {
+app.get("/", function(req, res) {
 	res.sendFile(__dirname + "/index.html");
 });
 
-server.listen(PORT, function() {
+// listen for connections and disconnections
+io.on("connection", function(socket) {
+	console.log("a user connected");
+	socket.on("disconnect", function() {
+		console.log("a user disconnected");
+	});
+});
+
+app.listen(PORT, function() {
 	console.log(`Listening on ${PORT}`);
 });
