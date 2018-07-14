@@ -58,62 +58,17 @@ function create() {
       }
     });
   });
+  this.socket.on("playerMoved", function(playerInfo) {
+    self.otherPlayers.getChildren().forEach(function(otherPlayer) {
+      if (playerInfo.playerId === otherPlayer.playerId) {
+        otherPlayer.setRotation(playerInfo.rotation);
+        otherPlayer.setPosition(playerInfo.x, playerInfo.y);
+      }
+    });
+  });
   // handle player input with built in keyboard manager
   // populate cursors with up, down, left, right key objects and bind them to arrow keys
   this.cursors = this.input.keyboard.createCursorKeys();
-}
-
-function update() {
-  // determine if arrow keys are being held down
-  // setAngularVelocity() allows ship to rotate left and right
-  if (this.ship) {
-    if (this.cursors.left.isDown) {
-      this.ship.setAngularVelocity(-150);
-    } else if (this.cursors.right.isDown) {
-      this.ship.setAngularVelocity(150);
-    } else {
-      // neither left or right keys pressed, reset to 0
-      this.ship.setAngularVelocity(0);
-    }
-
-    if (this.cursors.up.isDown) {
-      // udpate ships velocity when up key is pressed
-      this.physics.velocityFromRotation(
-        this.ship.rotation + 1.5,
-        100,
-        this.ship.body.acceleration
-      );
-    } else {
-      this.ship.setAcceleration(0);
-    }
-    // load ship to the other side of the screen if it goes off screen
-    this.physics.world.wrap(this.ship, 5);
-
-    // emit player movement
-    var x = this.ship.x;
-    var y = this.ship.y;
-    var r = this.ship.rotation;
-    if (
-      this.ship.oldPosition &&
-      (x !== this.ship.oldPosition.x ||
-        y !== this.ship.oldPosition.y ||
-        r !== this.ship.oldPosition.rotation)
-    ) {
-      // player position or rotation changed, emit a playerMovement event
-      this.socket.emit("playerMovement", {
-        x: this.ship.x,
-        y: this.ship.y,
-        rotation: this.ship.rotation
-      });
-    }
-
-    // save old position data
-    this.ship.oldPosition = {
-      x: this.ship.x,
-      y: this.ship.y,
-      rotation: this.ship.rotation
-    };
-  }
 }
 
 // create a new player
@@ -146,4 +101,57 @@ function addOtherPlayers(self, playerInfo) {
   }
   otherPlayer.playerId = playerInfo.playerId;
   self.otherPlayers.add(otherPlayer);
+}
+
+function update() {
+  // determine if arrow keys are being held down
+  // setAngularVelocity() allows ship to rotate left and right
+  if (this.ship) {
+    if (this.cursors.left.isDown) {
+      this.ship.setAngularVelocity(-150);
+    } else if (this.cursors.right.isDown) {
+      this.ship.setAngularVelocity(150);
+    } else {
+      // neither left or right keys pressed, reset to 0
+      this.ship.setAngularVelocity(0);
+    }
+
+    if (this.cursors.up.isDown) {
+      // udpate ships velocity when up key is pressed
+      this.physics.velocityFromRotation(
+        this.ship.rotation + 1.5,
+        100,
+        this.ship.body.acceleration
+      );
+    } else {
+      this.ship.setAcceleration(0);
+    }
+    // load ship to the other side of the screen if it goes off screen
+    // this.physics.world.wrap(this.ship, 5);
+
+    // emit player movement
+    var x = this.ship.x;
+    var y = this.ship.y;
+    var r = this.ship.rotation;
+    if (
+      this.ship.oldPosition &&
+      (x !== this.ship.oldPosition.x ||
+        y !== this.ship.oldPosition.y ||
+        r !== this.ship.oldPosition.rotation)
+    ) {
+      // player position or rotation changed, emit a playerMovement event
+      this.socket.emit("playerMovement", {
+        x: this.ship.x,
+        y: this.ship.y,
+        rotation: this.ship.rotation
+      });
+    }
+
+    // save old position data
+    this.ship.oldPosition = {
+      x: this.ship.x,
+      y: this.ship.y,
+      rotation: this.ship.rotation
+    };
+  }
 }
