@@ -8,6 +8,8 @@ const cors = require("cors");
 
 const PORT = 8081;
 
+const players = {};
+
 // middleware
 app.use(helmet());
 app.use(express.json());
@@ -24,8 +26,25 @@ app.get("/", function(req, res) {
 // listen for connections and disconnections
 io.on("connection", function(socket) {
 	console.log("a user connected");
+	// create a new player and add it to our players object
+	players[socket.id] = {
+		// player data used to create sprites on client side and to update all players games
+		rotation: 0,
+		x: Math.floor(Math.random() * 700) + 50,
+		y: Math.floor(Math.random() * 500) + 50,
+		playerId: socket.id,
+		team: Math.floor(Math.random() * 2) == 0 ? "red" : "blue"
+	};
+	// send the players object to the new player
+	socket.emit("currentPlayers", players);
+	// update all other players of the new player
+	socket.broadcast.emit("newPlayer", players[socket.id]);
+	// when a player disconnects, remove them from the players object
 	socket.on("disconnect", function() {
 		console.log("a user disconnected");
+		delete players[socket.id];
+		// emit a message to all players to remove this player
+		io.emit("disconnect", socket.id);
 	});
 });
 
