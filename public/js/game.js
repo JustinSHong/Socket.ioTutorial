@@ -58,9 +58,38 @@ function create() {
       }
     });
   });
+  // handle player input with built in keyboard manager
+  // populate cursors with up, down, left, right key objects and bind them to arrow keys
+  this.cursors = this.input.keyboard.createCursorKeys();
 }
 
-function update() {}
+function update() {
+  // determine if arrow keys are being held down
+  // setAngularVelocity() allows ship to rotate left and right
+  if (this.ship) {
+    if (this.cursors.left.isDown) {
+      this.ship.setAngularVelocity(-150);
+    } else if (this.cursors.right.isDown) {
+      this.ship.setAngularVelocity(150);
+    } else {
+      // neither left or right keys pressed, reset to 0
+      this.ship.setAngularVelocity(0);
+    }
+
+    if (this.cursors.up.isDown) {
+      // udpate ships velocity when up key is pressed
+      this.physics.velocityFromRotation(
+        this.ship.rotation + 1.5,
+        100,
+        this.ship.body.acceleration
+      );
+    } else {
+      this.ship.setAcceleration(0);
+    }
+    // load ship to the other side of the screen if it goes off screen
+    this.physics.world.wrap(this.ship, 5);
+  }
+}
 
 // create a new player
 function addPlayer(self, playerInfo) {
