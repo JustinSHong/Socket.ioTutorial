@@ -29,16 +29,37 @@ function preload() {
 function create() {
   var self = this;
   this.socket = io();
+  this.otherPlayers = this.physics.add.group();
   // listen for the currentPlayers event
   this.socket.on("currentPlayers", function(players) {
     Object.keys(players).forEach(function(id) {
       // find new player
       if (players[id].playerId === self.socket.id) {
         addPlayer(self, players[id]);
+      } else {
+        // player is not the current player
+        addOtherPlayers(self, players[id]);
+      }
+    });
+  });
+  // create another group, otherPlayers, to manage all other players
+  // groups are a way to manage similar objects and control them as one unit
+  this.socket.on("newPlayer", function(playerInfo) {
+    // listen for newPlayer event
+    addOtherPlayers(self, playerInfo);
+  });
+  this.socket.on("disconnect", function(playerId) {
+    // listen for disconnect event
+    self.otherPlayers.getChildren().forEach(function(otherPlayer) {
+      // remove the disconnected player's ship from the game
+      if (playerId === otherPlayer.playerId) {
+        otherPlayer.destroy();
       }
     });
   });
 }
+
+function update() {}
 
 // create a new player
 function addPlayer(self, playerInfo) {
@@ -58,4 +79,18 @@ function addPlayer(self, playerInfo) {
   self.ship.setMaxVelocity(200); // max speed
 }
 
-function update() {}
+function addOtherPlayers(self, playerInfo) {
+  const otherPlayer = self.add
+    .sprite(playerInfo.x, playerInfo.y, "otherPlayer")
+    .setOrigin(0.5, 0.5)
+    .setDisplaySize(53, 40);
+  if (playerInfo.team === "blue") {
+    otherPlayer.setTint(0x0000ff);
+  } else {
+    otherPlayer.setTint(0xff0000);
+  }
+  otherPlayer.playerId = playerInfo.playerId;
+  self.otherPlayers.add(otherPlayer);
+}
+
+
