@@ -69,6 +69,20 @@ function create() {
   // handle player input with built in keyboard manager
   // populate cursors with up, down, left, right key objects and bind them to arrow keys
   this.cursors = this.input.keyboard.createCursorKeys();
+  // handle score
+  this.blueScoreText = this.add.text(16, 16, "", {
+    fontSize: "32px",
+    fill: "#0000FF"
+  });
+  this.redScoreText = this.add.text(584, 16, "", {
+    fontSize: "32px",
+    fill: "#FF0000"
+  });
+  // update score
+  this.socket.on("scoreUpdate", function(scores) {
+    self.blueScoreText.setText("Blue: " + scores.blue);
+    self.redScoreText.setText("Red: " + scores.red);
+  });
 }
 
 // create a new player
